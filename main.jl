@@ -8,7 +8,7 @@ using PyPlot
 using JLD
 using PyPlot
 
-# Include the following files
+# Include the following files ======> IMPORTANT: NEED TO CHANGE ROAD PROFILE IN WARM START!!!!
 include("classes.jl")             
 include("LMPC_models.jl")           # Need to modify this to change road profile
 include("SolveLMPCProblem.jl")      
@@ -26,7 +26,7 @@ SystemParams.xF = [0.0 10.0 0.0 10.0]
 SystemParams.dt = 0.1
 SystemParams.rho = 0.01
 
-LMPCparams.N = 6
+LMPCparams.N = 4
 
 # Initial Conditions;
 x0 = [0.0,0.0,0.0,0.0]
@@ -63,13 +63,16 @@ Qfun[:, 1:time[it], it] = ComputeCost(x_LMPC[:,1:time[it]], u_LMPC[:,1:time[it]]
 # Now start with the Second iteration (The first is for the feasible trajectory)
 it = 2
 Difference = 1
-while (abs(Difference) > (1e-7))&&(it<10)
+xWarm = zeros(4, LMPCparams.N+1)
+uWarm = zeros(1, LMPCparams.N)
+while (abs(Difference) > (1e-1))&&(it<10)
     
     # Vectorize the SS and the Q function
     SSdim = sum(time) # sum(Time) = Total number of time steps for all iterations
     ConvSS   = zeros(4, SSdim)
     ConvQfun = zeros(SSdim)
-    
+    lambWarm = zeros(SSdim)
+
     Counter  = 1
     for ii = 1:it-1
         for kk = 1:time[ii]
@@ -97,15 +100,43 @@ while (abs(Difference) > (1e-7))&&(it<10)
         
         if t == 1
             #solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
-            solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
+            solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun, xWarm, uWarm, lambWarm) 
         else
             #solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
-            solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
+            solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun, xWarm, uWarm, lambWarm) 
         end
 
         x_LMPC[:,t+1]  = LMPCSol.x[:,2]
         u_LMPC[:,t]    = LMPCSol.u[:,1]
 
+	# Compute the Wart Start
+	N = LMPCparams.N 
+	xWarm[:, 1:N]   = LMPCSol.x[:,2:N+1]
+	uWarm[1, 1:N-1] = LMPCSol.u[:,2:N]
+
+	Counter = 1
+	for ii = 1:it-1
+		for kk = 1:time[ii]
+			if kk < time[ii]
+				xWarm[:, N+1] = SS[:, kk+1, ii] * LMPCSol.lamb[Counter]
+				
+				if kk == 1
+					lambWarm[Counter] = 0
+				else
+					lambWarm[Counter] = LMPCSol.lamb[Counter-1]
+				end
+				Counter = Counter + 1
+			
+			else
+				lambWarm[Counter] = LMPCSol.lamb[Counter-1] + LMPCSol.lamb[Counter]
+				xWarm[:, N+1] = SS[:, kk, ii] * LMPCSol.lamb[Counter]
+				Counter = Counter + 1
+			end
+		end
+	end
+	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.dt + SystemParams.rho*xWarm[1,N]^2 + SystemParams.g*sin(sin( (xWarm[2,N]-SystemParams.xF[2])/SystemParams.xF[2]*4*3.14) ) 
+
+	# Extract Cost
         cost_LMPC[t+1] = LMPCSol.cost
         println("LMPC cost at step ",t, " of iteration ", it," is ", cost_LMPC[t+1])
 
