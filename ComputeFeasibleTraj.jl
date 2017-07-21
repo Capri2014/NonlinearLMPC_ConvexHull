@@ -16,7 +16,7 @@ function Feasible_Traj(SystemParams::TypeSystemParams, x0::Array{Float64,1})
     u_feasible[:,1] = 5
 
     for i = 1:Points
-	    teta = 3*sin( (x_feasible[2,i] - xF[2]) / xF[2] * 2 * 3.14 )
+	    teta =sin( sin( (x_feasible[2,i] - xF[2]) / xF[2] * 4 * 3.14 ))
 	
 	# Logic to compute input
 	if x_feasible[1,i] > 10

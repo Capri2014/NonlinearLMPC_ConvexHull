@@ -1,15 +1,19 @@
-using JuMP
+# Nonlinear LMPC with CS as terminals set and P as terminal cost
+# Author: Ugo Rosolia, Date 7/20/2017
+
 using Ipopt
+using JuMP
 using JLD
 using PyPlot
 using JLD
 using PyPlot
 
-include("classes.jl")
-include("LMPC_models.jl")
-include("SolveLMPCProblem.jl")
-include("ComputeFeasibleTraj.jl")
-include("ComputeCost.jl")
+# Include the following files
+include("classes.jl")             
+include("LMPC_models.jl")           # Need to modify this to change road profile
+include("SolveLMPCProblem.jl")      
+include("ComputeFeasibleTraj.jl")   # Need to modify this to change road profile
+include("ComputeCost.jl")           # Need to modify this to cahnge road profile
 
 
 SystemParams = TypeSystemParams()
@@ -17,12 +21,12 @@ LMPCparams   = TypeLMPCparams()
 LMPCSol      = TypeLMPCSol()
 
 # Initialize System Parameters
-SystemParams.g  = 9.81
+SystemParams.g  = 0.981
 SystemParams.xF = [0.0 10.0 0.0 10.0]
 SystemParams.dt = 0.1
 SystemParams.rho = 0.01
 
-LMPCparams.N = 4
+LMPCparams.N = 6
 
 # Initial Conditions;
 x0 = [0.0,0.0,0.0,0.0]
@@ -46,8 +50,8 @@ IndexTime = find(x -> x ==0, x_feasible[4,:]-SystemParams.xF[4]'*ones(1,201))
 
 time[1] = IndexTime[1] + 1
 
-x_LMPC = zeros(4,Buffer+3)
-u_LMPC = zeros(1,Buffer-1+3)
+x_LMPC = zeros(4,Buffer)
+u_LMPC = zeros(1,Buffer-1)
 
 x_LMPC[:,1:time[1]]   = x_feasible[:, 1:time[1]] 
 u_LMPC[:,1:time[1]-1] = u_feasible[:, 1:time[1]-1]  
@@ -59,7 +63,7 @@ Qfun[:, 1:time[it], it] = ComputeCost(x_LMPC[:,1:time[it]], u_LMPC[:,1:time[it]]
 # Now start with the Second iteration (The first is for the feasible trajectory)
 it = 2
 Difference = 1
-while (abs(Difference) > (1e-7))&&(it<14)
+while (abs(Difference) > (1e-7))&&(it<10)
     
     # Vectorize the SS and the Q function
     SSdim = sum(time) # sum(Time) = Total number of time steps for all iterations
@@ -89,13 +93,13 @@ while (abs(Difference) > (1e-7))&&(it<14)
     
     # Enter the time loop for the LMPC at the j-th iteration
     t = 1
-    while ((cost_LMPC[t] > (1e-3))&&(t<Buffer-1))
+    while ((cost_LMPC[t] > (1e-2))&&(t<Buffer-1))
         
         if t == 1
-            solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
+            #solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
             solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
         else
-            solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
+            #solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
             solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
         end
 
@@ -132,7 +136,7 @@ s  = collect(0:0.1:xF[2])
 Length_s = size(s)[1]
 angle = zeros(Length_s)
 for i=1:Length_s
-	angle[i] = 3*sin( (s[i] -xF[2])/xF[2]*2*3.14  )
+	angle[i] = sin(sin( (s[i] -xF[2])/xF[2]*4*3.14  ))
 end
 
 figure()

@@ -45,7 +45,7 @@ type LMPC_Model
 
         # System dynamics
         for i=1:N
-            @NLconstraint(mdl, x_Ol[1,i+1] == x_Ol[1, i] + dt * ( u_Ol[1, i] - g*sin( 3*sin( ( x_Ol[2,i] - xF[2] )/ xF[2]*2*3.14  )  ) - rho*x_Ol[1,i]^2  ))
+            @NLconstraint(mdl, x_Ol[1,i+1] == x_Ol[1, i] + dt * ( u_Ol[1, i] - g*sin( sin(sin( ( x_Ol[2,i] - xF[2] )/ xF[2]*4*3.14  )) ) - rho*x_Ol[1,i]^2  ))
            
 	    @NLconstraint(mdl, x_Ol[2,i+1] == x_Ol[2, i] + dt * (x_Ol[1, i]) )
 	    @NLconstraint(mdl, x_Ol[3,i+1] == x_Ol[1, i])
@@ -79,7 +79,7 @@ type LMPC_Model
 	# Cost definitions
         # State cost
 	@NLexpression(mdl, state_cost, sum{ u_Ol[1, j]^2, j=1:N}  
-        + sum{10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4])^2  )/( (10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4]) )^2)^2 + 1)^0.5 , j=1:N+1} ) 
+        + sum{10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4])^2  )/( (10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4]) )^2)^2 + 1)^0.5 , j=1:N} ) 
 
         # Terminal  cost
         @NLexpression(mdl, termi_cost, sum{ Qfun[j] * lamb[j,1] ,j=1:SSdim})
