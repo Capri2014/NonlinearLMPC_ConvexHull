@@ -25,10 +25,11 @@ SystemParams.g   = 0.981
 SystemParams.xF  = [0.0 10.0 0.0 10.0]
 SystemParams.dt  = 0.1
 SystemParams.rho = 0.01
-SystemParams.m   = 0.5
+SystemParams.m   = 1.0
 
-LMPCparams.N = 4
-
+LMPCparams.N  = 4
+LMPCparams.Qt = 1.0
+LMPCparams.Qf = 1.0
 # Initial Conditions;
 x0 = [0.0,0.0,0.0,0.0]
 

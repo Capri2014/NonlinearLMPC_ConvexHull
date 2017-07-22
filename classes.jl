@@ -8,11 +8,11 @@ type TypeSystemParams          # parameters for MPC solver
 end
 
 type TypeLMPCparams          # parameters for MPC solver
-    Q::Array{Float64,2}
-    Qe::Array{Float64,2}
+    Qt::Float64
+    Qf::Float64
     R::Array{Float64,2}
     N::Int64
-    TypeLMPCparams( Q=[1 1;1 1], Qe=[1 1;1 1], R=[1 1;1 1], N = 0 ) = new(Q, Qe, R, N)
+    TypeLMPCparams( Qt=1, Qf=1, R=[1 1;1 1], N = 0 ) = new(Qt, Qf, R, N)
 end
 
 type TypeLMPCSol          # parameters for MPC solver

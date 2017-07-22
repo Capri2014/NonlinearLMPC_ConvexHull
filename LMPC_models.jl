@@ -22,7 +22,10 @@ type LMPC_Model
         n          = 4
         d          = 1
 	
-        N           = LMPCparams.N
+        N  = LMPCparams.N
+	Qf = LMPCparams.Qf
+	Qt = LMPCparams.Qt
+
 
 	dt = SystemParams.dt
         g  = SystemParams.g
@@ -99,8 +102,8 @@ type LMPC_Model
         
 	# Cost definitions
         # State cost
-	@NLexpression(mdl, state_cost, sum{ u_Ol[1, j]^2, j=1:N}  
-        + sum{10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4])^2  )/( (10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4]) )^2)^2 + 1)^0.5 , j=1:N} ) 
+	@NLexpression(mdl, state_cost, sum{ Qf*(u_Ol[1, j]^2), j=1:N} 
+	+ sum{Qt*10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4])^2  )/( (10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4]) )^2)^2 + 1)^0.5 , j=1:N} ) 
 
         # Terminal  cost
         @NLexpression(mdl, termi_cost, sum{ Qfun[j] * lamb[j] ,j=1:SSdim})
