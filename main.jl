@@ -21,10 +21,11 @@ LMPCparams   = TypeLMPCparams()
 LMPCSol      = TypeLMPCSol()
 
 # Initialize System Parameters
-SystemParams.g  = 0.981
-SystemParams.xF = [0.0 10.0 0.0 10.0]
-SystemParams.dt = 0.1
+SystemParams.g   = 0.981
+SystemParams.xF  = [0.0 10.0 0.0 10.0]
+SystemParams.dt  = 0.1
 SystemParams.rho = 0.01
+SystemParams.m   = 0.5
 
 LMPCparams.N = 4
 
@@ -134,7 +135,8 @@ while (abs(Difference) > (1e-1))&&(it<10)
 			end
 		end
 	end
-	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.dt + SystemParams.rho*xWarm[1,N]^2 + SystemParams.g*sin(sin( (xWarm[2,N]-SystemParams.xF[2])/SystemParams.xF[2]*4*3.14) ) 
+	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.dt*SystemParams.m + SystemParams.rho*xWarm[1,N]^2  
+		      + SystemParams.m*SystemParams.g*sin(sin( (xWarm[2,N]-SystemParams.xF[2])/SystemParams.xF[2]*4*3.14) ) 
 
 	# Extract Cost
         cost_LMPC[t+1] = LMPCSol.cost

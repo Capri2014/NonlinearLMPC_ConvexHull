@@ -17,16 +17,18 @@ type LMPC_Model
 
     function LMPC_Model(LMPCparams::TypeLMPCparams,SystemParams::TypeSystemParams, SSdim::Int64)
         println("Starting creation")
-        m = new()
+        model = new()
+	
         n          = 4
         d          = 1
-
+	
         N           = LMPCparams.N
 
 	dt = SystemParams.dt
         g  = SystemParams.g
 	rho= SystemParams.rho
         xF = SystemParams.xF
+	m  = SystemParams.m
 
         # Create Model
         mdl = Model(solver = IpoptSolver(print_level=0))
@@ -64,7 +66,7 @@ type LMPC_Model
 
         # System dynamics
         for i=1:N
-            @NLconstraint(mdl, x_Ol[1,i+1] == x_Ol[1, i] + dt * ( u_Ol[1, i] - g*sin( sin(sin( ( x_Ol[2,i] - xF[2] )/ xF[2]*4*3.14  )) ) - rho*x_Ol[1,i]^2  ))
+            @NLconstraint(mdl, x_Ol[1,i+1] == x_Ol[1, i] + dt/m * ( u_Ol[1, i] - m*g*sin( sin(sin( ( x_Ol[2,i] - xF[2] )/ xF[2]*4*3.14  )) ) - rho*x_Ol[1,i]^2  ))
            
 	    @NLconstraint(mdl, x_Ol[2,i+1] == x_Ol[2, i] + dt * (x_Ol[1, i]) )
 	    @NLconstraint(mdl, x_Ol[3,i+1] == x_Ol[1, i])
@@ -113,19 +115,19 @@ type LMPC_Model
         #sol_stat=solve(mdl)
         #println("Finished solve 2: $sol_stat")
         
-        m.mdl   = mdl
-        m.x0    = x0
-        m.Qfun  = Qfun
-	m.lamb  = lamb
-	m.SS    = SS
-        m.x_Ol  = x_Ol
-	m.xWarm = xWarm
-	m.uWarm = uWarm
-        m.u_Ol  = u_Ol
-	m.lambWarm   = lambWarm
-        m.state_cost = state_cost
-        m.termi_cost = termi_cost
+        model.mdl   = mdl
+        model.x0    = x0
+        model.Qfun  = Qfun
+	model.lamb  = lamb
+	model.SS    = SS
+        model.x_Ol  = x_Ol
+	model.xWarm = xWarm
+	model.uWarm = uWarm
+        model.u_Ol  = u_Ol
+	model.lambWarm   = lambWarm
+        model.state_cost = state_cost
+        model.termi_cost = termi_cost
         
-        return m
+        return model
     end
 end

@@ -6,6 +6,7 @@ function ComputeCost(x::Array{Float64,2}, u::Array{Float64,2}, LMPCparams::TypeL
     dt  = SystemParams.dt
     rho = SystemParams.rho
     g   = SystemParams.g
+    m   = SystemParams.m
 
     for i = 1:Points
         index = Points - i + 1
@@ -18,11 +19,11 @@ function ComputeCost(x::Array{Float64,2}, u::Array{Float64,2}, LMPCparams::TypeL
 	    otheta = sin(sin( (os - xF[2]) / xF[2] * 4 * 3.14 ))
 
 	    Norm2 = v^2 + ( s - xF[2] )^2 + ov^2 +( os - xF[4] )^2 
-	    Qfun[index] = 10*Norm2 / ((10*Norm2)^2 + 1)^0.5 +  ( (v-ov)/dt + rho*ov^2 + g*sin(otheta))^2 
+	    Qfun[index] = 10*Norm2 / ((10*Norm2)^2 + 1)^0.5 +  ( (v-ov)/dt*m + rho*ov^2 +m*g*sin(otheta))^2 
 	    
-	    if ( (v-ov)/dt + rho*ov^2 + g*sin(otheta) - u[1, index-1])^2 > 0.0001
+	    if ( (v-ov)/dt*m + rho*ov^2 + m*g*sin(otheta) - u[1, index-1])^2 > 0.0001
 	            println("ERROR: INPUT DO NOT MATCH STATE EXPRESSION FOR INPUT")
-	            println("Computed ", ( (v-ov)/dt + rho*ov^2 + g*sin(otheta))  )
+	            println("Computed ", ( (v-ov)/dt + rho*ov^2 + m*g*sin(otheta))  )
 	            println("Real: ", u[1, index-1], " Index: ", index-1)
 	    end
         else
@@ -35,15 +36,15 @@ function ComputeCost(x::Array{Float64,2}, u::Array{Float64,2}, LMPCparams::TypeL
 
             Norm2 = v^2 + ( s - xF[2] )^2 + ov^2 +( os - xF[4] )^2 
 	    if index> 1
-		    Qfun[index] = Qfun[index+1] + 10*Norm2/( (10*Norm2)^2  + 1)^0.5 + ( (v-ov)/dt + rho*ov^2 + g*sin(otheta))^2  
+		    Qfun[index] = Qfun[index+1] + 10*Norm2/( (10*Norm2)^2  + 1)^0.5 + ( (v-ov)/dt*m + rho*ov^2 +m*g*sin(otheta))^2  
 	    else
 		    Qfun[index] = Qfun[index+1] + 10*Norm2/( (10*Norm2)^2  + 1)^0.5   
 	    end
 	    
 	    if index>1
-	        if ( (v-ov)/dt + rho*ov^2 + g*sin(otheta) - u[1, index-1])^2 > 0.0001
+	        if ( (v-ov)/dt*m + rho*ov^2 + m*g*sin(otheta) - u[1, index-1])^2 > 0.0001
 		    println("ERROR: INPUT DO NOT MATCH STATE EXPRESSION FOR INPUT")
-		    println("Computed ", ( (v-ov)/dt + rho*ov^2 + g*sin(otheta))  )
+		    println("Computed ", ( (v-ov)/dt + rho*ov^2 + m*g*sin(otheta))  )
 		    println("Real: ", u[1, index-1], " Index: ", index-1 )
 		end
 	    end

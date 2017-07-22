@@ -2,8 +2,9 @@ type TypeSystemParams          # parameters for MPC solver
     g::Float64
     rho::Float64
     dt::Float64
+    m::Float64
     xF::Array{Float64,2}
-    TypeSystemParams( g = 9, rho = 4,  dt= 0, xF = [0 0 0 0] ) = new(g, rho, dt, xF)
+    TypeSystemParams( g = 9, rho = 4,  dt= 0, m=0, xF = [0 0 0 0] ) = new(g, rho, dt, m, xF)
 end
 
 type TypeLMPCparams          # parameters for MPC solver
