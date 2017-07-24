@@ -67,7 +67,7 @@ it = 2
 Difference = 1
 xWarm = zeros(4, LMPCparams.N+1)
 uWarm = zeros(1, LMPCparams.N)
-while (abs(Difference) > (1e-1))&&(it<10)
+while (abs(Difference) > (1e-1))&&(it<20)
     
     # Vectorize the SS and the Q function
     SSdim = sum(time) # sum(Time) = Total number of time steps for all iterations
