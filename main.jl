@@ -12,9 +12,9 @@ using PyPlot
 include("classes.jl")             
 include("LMPC_models.jl")           # Need to modify this to change road profile
 include("SolveLMPCProblem.jl")      
-include("ComputeFeasibleTraj.jl")   # Need to modify this to change road profile
-include("ComputeCost.jl")           # Need to modify this to cahnge road profile
-
+include("ComputeFeasibleTraj.jl")   
+include("ComputeCost.jl")           
+include("RoadProfile.jl")         
 
 SystemParams = TypeSystemParams()
 LMPCparams   = TypeLMPCparams()
@@ -136,8 +136,8 @@ while (abs(Difference) > (1e-1))&&(it<20)
 			end
 		end
 	end
-	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.dt*SystemParams.m + SystemParams.rho*xWarm[1,N]^2  
-		      + SystemParams.m*SystemParams.g*sin(sin( (xWarm[2,N]-SystemParams.xF[2])/SystemParams.xF[2]*4*3.14) ) 
+	theta       = RoadProfile(xWarm[2,N], SystemParams)
+	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.dt*SystemParams.m + SystemParams.rho*xWarm[1,N]^2 + SystemParams.m*SystemParams.g*sin(theta) 
 
 	# Extract Cost
         cost_LMPC[t+1] = LMPCSol.cost
@@ -170,7 +170,7 @@ s  = collect(0:0.1:xF[2])
 Length_s = size(s)[1]
 angle = zeros(Length_s)
 for i=1:Length_s
-	angle[i] = sin(sin( (s[i] -xF[2])/xF[2]*4*3.14  ))
+	angle[i] = RoadProfile(s[i], SystemParams)
 end
 
 figure()

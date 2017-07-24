@@ -1,5 +1,8 @@
 function Feasible_Traj(SystemParams::TypeSystemParams, x0::Array{Float64,1})
 
+    
+    include("RoadProfile.jl")
+
     g   = SystemParams.g
     dt  = SystemParams.dt
     xF  = SystemParams.xF
@@ -16,7 +19,7 @@ function Feasible_Traj(SystemParams::TypeSystemParams, x0::Array{Float64,1})
     u_feasible[:,1] = 5
 
     for i = 1:Points
-        teta =sin( sin( (x_feasible[2,i] - xF[2]) / xF[2] * 4 * 3.14 ))
+	teta = RoadProfile(x_feasible[2,i], SystemParams)
 	
 	# Logic to compute input
 	if x_feasible[1,i] > 10
