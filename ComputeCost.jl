@@ -37,7 +37,7 @@ function ComputeCost(x::Array{Float64,2}, u::Array{Float64,2}, LMPCparams::TypeL
             ov= x[3, index]
             os= x[4, index]
 
-	    otheta = sin(sin( (os - xF[2]) / xF[2] * 4 * 3.14 ))
+	    otheta = RoadProfile(os, SystemParams)
 
 	    Norm2 = v^2 + ( s - xF[2] )^2 + ov^2 +( os - xF[4] )^2 
 	    if index> 1

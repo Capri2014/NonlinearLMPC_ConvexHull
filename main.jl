@@ -27,8 +27,8 @@ SystemParams.dt  = 0.1
 SystemParams.rho = 0.01
 SystemParams.m   = 1.0
 
-LMPCparams.N  = 4
-LMPCparams.Qt = 0.5
+LMPCparams.N  = 5
+LMPCparams.Qt = 1.0
 LMPCparams.Qf = 1.0
 # Initial Conditions;
 x0 = [0.0,0.0,0.0,0.0]
@@ -121,27 +121,26 @@ while (abs(Difference) > (1e-1))&&(it<20)
 		for kk = 1:time[ii]
 			if kk < time[ii]
 				xWarm[:, N+1] = SS[:, kk+1, ii] * LMPCSol.lamb[Counter]
-				
 				if kk == 1
 					lambWarm[Counter] = 0
 				else
 					lambWarm[Counter] = LMPCSol.lamb[Counter-1]
 				end
-				Counter = Counter + 1
-			
 			else
 				lambWarm[Counter] = LMPCSol.lamb[Counter-1] + LMPCSol.lamb[Counter]
 				xWarm[:, N+1] = SS[:, kk, ii] * LMPCSol.lamb[Counter]
-				Counter = Counter + 1
 			end
+			Counter = Counter + 1
 		end
 	end
 	theta       = RoadProfile(xWarm[2,N], SystemParams)
-	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.dt*SystemParams.m + SystemParams.rho*xWarm[1,N]^2 + SystemParams.m*SystemParams.g*sin(theta) 
+	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.m*SystemParams.dt + SystemParams.rho*xWarm[1,N]^2 + SystemParams.m*SystemParams.g*sin(theta) 
 
 	# Extract Cost
-        cost_LMPC[t+1] = LMPCSol.cost
-        println("LMPC cost at step ",t, " of iteration ", it," is ", cost_LMPC[t+1])
+	if t > 1
+		cost_LMPC[t+1] = LMPCSol.cost + u_LMPC[1, t-1]^2
+		println("LMPC cost at step ",t, " of iteration ", it," is ", cost_LMPC[t+1])
+        end
 
         t=t+1    
     end
