@@ -1,53 +1,42 @@
 function Feasible_Traj(SystemParams::TypeSystemParams, x0::Array{Float64,1})
 
     
-    include("RoadProfile.jl")
-
     g   = SystemParams.g
     dt  = SystemParams.dt
     xF  = SystemParams.xF
-    rho = SystemParams.rho
+    l   = SystemParams.l  
     m   = SystemParams.m
+    b   = SystemParams.b
 
-    Points = 200
+    Points = 100
     
     x_feasible = zeros(4, Points+1)
-    u_feasible = zeros(1, Points)
+    u_feasible = zeros(2, Points)
 
 
     x_feasible[:,1] = x0
-    u_feasible[:,1] = 5
 
     for i = 1:Points
-	teta = RoadProfile(x_feasible[2,i], SystemParams)
-	
 	# Logic to compute input
-	if x_feasible[1,i] > 10
-		u_feasible[1,i] = 0
+	if i==1
+		u_feasible[2, i] =  10.0
+	elseif ((x_feasible[4,i] + dt*x_feasible[3,i]-xF[4])^2<0.0001)&&((x_feasible[3,i])^2>0.001)
+		u_feasible[2, i] = -10.0
 	else
-		u_feasible[1,i] = u_feasible[1,1]  + rho * x_feasible[1,i] + m*g* sin(teta)
+		u_feasible[2, i] = -0.0
 	end
-	
-	Next_s = x_feasible[2,i] + dt * x_feasible[1,i]
-	if (xF[2] - Next_s ) < 5
-		u_feasible[1,i] = -0.7* u_feasible[1,1]  + rho * x_feasible[1,i] + m*g*sin(teta)
-	end
-	if (xF[2] - Next_s ) < 0.5
-		v_desired       = (xF[2] - Next_s)/dt 
-		u_feasible[1,i] = ( v_desired - x_feasible[1,i]  )/dt*m + rho*x_feasible[1,i]^ 2 + m*g*sin(teta) 
-	end
-
-	if xF[2] == Next_s
-		u_feasible[1,i] = ( 0 - x_feasible[1,i]  )/dt*m + rho* x_feasible[1,i]^2 + m*g*sin(teta) 
-	end
+	u_feasible[1, i] =  + m*g*l*( sin( x_feasible[2,i] ) + cos( x_feasible[2,i])*u_feasible[2,i]  ) + b*x_feasible[1,i]
 
 	# Propagate input forward
-	x_feasible[1,i+1] = x_feasible[1,i] + dt/m*( u_feasible[1,i]  - rho* x_feasible[1,i]^2 -m*g*sin( teta ) )
+	x_feasible[1,i+1] = x_feasible[1,i] + dt/(m*l^2)*( u_feasible[1,i]  - m*g*l*( sin( x_feasible[2,i] ) + cos( x_feasible[2,i])*u_feasible[2,i]  ) - b*x_feasible[1,i])
 	x_feasible[2,i+1] = x_feasible[2,i] + dt*( x_feasible[1,i] )
-	x_feasible[3,i+1] = x_feasible[1,i]
-	x_feasible[4,i+1] = x_feasible[2,i]
+	x_feasible[3,i+1] = x_feasible[3,i] + dt*( u_feasible[2,i] )
+	x_feasible[4,i+1] = x_feasible[4,i] + dt*( x_feasible[3,i] )
 
 
+	#println("x_feasible " , x_feasible[4,i])
+	#println("dt*x_feasible ", dt*x_feasible[3,i])
+	#println("x_next ", x_feasible[4,i+1])
     end
     return x_feasible, u_feasible
 

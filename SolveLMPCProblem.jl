@@ -18,6 +18,8 @@ function solveLMPCProblem(mdl::LMPC_Model,LMPCSol::TypeLMPCSol,xCurr::Array{Floa
     LMPCSol.u    = getvalue(mdl.u_Ol)
     LMPCSol.lamb = getvalue(mdl.lamb)
 
+    println("State Cost: ", getvalue(mdl.state_cost))
+    println("Terminal Cost: ", getvalue(mdl.termi_cost))
     LMPCSol.cost = getvalue(mdl.state_cost) + getvalue(mdl.termi_cost)
 
     println("Solved, status = $sol_status")

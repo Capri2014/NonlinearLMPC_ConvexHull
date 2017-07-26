@@ -21,17 +21,19 @@ LMPCparams   = TypeLMPCparams()
 LMPCSol      = TypeLMPCSol()
 
 # Initialize System Parameters
-SystemParams.g   = 0.981
-SystemParams.xF  = [0.0 10.0 0.0 10.0]
-SystemParams.dt  = 0.1
-SystemParams.rho = 0.01
-SystemParams.m   = 1.0
+SystemParams.g   = 9.81
+SystemParams.xF  = [0 3.14 0 2.0]
+SystemParams.dt  = 0.05
+SystemParams.l   = 1.0
+SystemParams.m   = 0.5
+SystemParams.b   = 0.01
 
-LMPCparams.N  = 5
-LMPCparams.Qt = 1.0
-LMPCparams.Qf = 1.0
+LMPCparams.N  = 3
+LMPCparams.Qt = 10.0
+LMPCparams.Q1 = 1.0     # Torque
+LMPCparams.Q2 = 0.1     # Acceleration
 # Initial Conditions;
-x0 = [0.0,0.0,0.0,0.0]
+x0 = [0.0,3.14,0.0,0.0]
 
 # Compute First Feasible Iteration    
 x_feasible, u_feasible = Feasible_Traj(SystemParams, x0)
@@ -41,19 +43,19 @@ hold()
 plot(x_feasible[2,:], x_feasible[1,:], "--g*")
 
 # Initialize SS and Q function for first feasible iteration
-Buffer = 200
+Buffer = 300
 
 SS   = zeros(4, Buffer, 20)
 Qfun = zeros(1, Buffer, 20)
 time = zeros(20)
 time = round(Int64, time)
 
-IndexTime = find(x -> x ==0, x_feasible[4,:]-SystemParams.xF[4]'*ones(1,201))
+IndexTime = find(x -> x <=0.0001, abs(x_feasible[4,:]-SystemParams.xF[4]'*ones(1,size(x_feasible)[2])))
 
 time[1] = IndexTime[1] + 1
 
 x_LMPC = zeros(4,Buffer)
-u_LMPC = zeros(1,Buffer-1)
+u_LMPC = zeros(2,Buffer-1)
 
 x_LMPC[:,1:time[1]]   = x_feasible[:, 1:time[1]] 
 u_LMPC[:,1:time[1]-1] = u_feasible[:, 1:time[1]-1]  
@@ -66,8 +68,8 @@ Qfun[:, 1:time[it], it] = ComputeCost(x_LMPC[:,1:time[it]], u_LMPC[:,1:time[it]]
 it = 2
 Difference = 1
 xWarm = zeros(4, LMPCparams.N+1)
-uWarm = zeros(1, LMPCparams.N)
-while (abs(Difference) > (1e-1))&&(it<20)
+uWarm = zeros(2, LMPCparams.N)
+while (abs(Difference) > (1e-1))&&(it<10)
     
     # Vectorize the SS and the Q function
     SSdim = sum(time) # sum(Time) = Total number of time steps for all iterations
@@ -90,7 +92,7 @@ while (abs(Difference) > (1e-1))&&(it<20)
     x_LMPC[:,1] = x0
 
 
-    u_LMPC      = zeros(1, Buffer)
+    u_LMPC      = zeros(2, Buffer)
     cost_LMPC   = ones(1,500)
 
     # Define the model at the j-th iteration (Need to define it at each iterations as SS and Q function change)
@@ -114,7 +116,7 @@ while (abs(Difference) > (1e-1))&&(it<20)
 	# Compute the Wart Start
 	N = LMPCparams.N 
 	xWarm[:, 1:N]   = LMPCSol.x[:,2:N+1]
-	uWarm[1, 1:N-1] = LMPCSol.u[:,2:N]
+	uWarm[:, 1:N-1] = LMPCSol.u[:,2:N]
 
 	Counter = 1
 	for ii = 1:it-1
@@ -133,14 +135,14 @@ while (abs(Difference) > (1e-1))&&(it<20)
 			Counter = Counter + 1
 		end
 	end
-	theta       = RoadProfile(xWarm[2,N], SystemParams)
-	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.m*SystemParams.dt + SystemParams.rho*xWarm[1,N]^2 + SystemParams.m*SystemParams.g*sin(theta) 
-
+	uWarm[1,N] = 0
+	uWarm[2,N] = 0
+	#	uWarm[1, N] = (xWarm[1,N+1] - xWarm[1,N])/SystemParams.m*SystemParams.dt + SystemParams.rho*xWarm[1,N]^2 + SystemParams.m*SystemParams.g*sin(theta) 
+#
 	# Extract Cost
-	if t > 1
-		cost_LMPC[t+1] = LMPCSol.cost + u_LMPC[1, t-1]^2
-		println("LMPC cost at step ",t, " of iteration ", it," is ", cost_LMPC[t+1])
-        end
+	cost_LMPC[t+1] = LMPCSol.cost 
+	println("LMPC cost at step ",t, " of iteration ", it," is ", cost_LMPC[t+1])
+        
 
         t=t+1    
     end
@@ -168,19 +170,14 @@ s  = collect(0:0.1:xF[2])
 
 Length_s = size(s)[1]
 angle = zeros(Length_s)
-for i=1:Length_s
-	angle[i] = RoadProfile(s[i], SystemParams)
-end
 
 figure()
 hold(1)
 i = 1 
-plot(SS[2, 1:time[i], i],  SS[1, 1:time[i], i], "-ro" )
-plot(s, angle, "-ko" )
+plot(SS[4, 1:time[i], i],  SS[2, 1:time[i], i], "-ro" )
 
 i = it
-plot(SS[2, 1:time[i], i],  SS[1, 1:time[i], i], "-go")
-plot(SS[2, 1:time[i], i], u_LMPC[1,1:time[i]], "-bo")
+plot(SS[4, 1:time[i], i],  SS[2, 1:time[i], i], "-go")
 grid(1)
 title("LMPC Steady State")
 axis("equal")

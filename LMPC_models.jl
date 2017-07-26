@@ -20,16 +20,18 @@ type LMPC_Model
         model = new()
 	
         n          = 4
-        d          = 1
+        d          = 2
 	
         N  = LMPCparams.N
-	Qf = LMPCparams.Qf
+	Q1 = LMPCparams.Q1
+	Q2 = LMPCparams.Q2
 	Qt = LMPCparams.Qt
 
 
 	dt = SystemParams.dt
         g  = SystemParams.g
-	rho= SystemParams.rho
+	l  = SystemParams.l
+	b  = SystemParams.b
         xF = SystemParams.xF
 	m  = SystemParams.m
 
@@ -45,8 +47,8 @@ type LMPC_Model
         @NLparameter(mdl, SS[1:n,1:SSdim] == 0)
         @NLparameter(mdl, Qfun[1:SSdim] == 0)
         @NLparameter(mdl, lambWarm[1:SSdim] == 0)
-        @NLparameter(mdl, xWarm[1:4, 1:N+1] == 0)
-        @NLparameter(mdl, uWarm[1:1, 1:N] == 0)
+        @NLparameter(mdl, xWarm[1:n, 1:N+1] == 0)
+        @NLparameter(mdl, uWarm[1:d, 1:N] == 0)
 
 	for i = 1:N+1
 		setvalue(x_Ol[1,i], getvalue( xWarm[1,i]) )
@@ -57,6 +59,7 @@ type LMPC_Model
 
 	for i = 1:N
 		setvalue(u_Ol[1,i], getvalue( uWarm[1,i]) )
+		setvalue(u_Ol[2,i], getvalue( uWarm[2,i]) )
 	end
 
 	for i = 1:SSdim
@@ -68,12 +71,12 @@ type LMPC_Model
         println("Initializing model...")
 
         # System dynamics
-        for i=1:N
-            @NLconstraint(mdl, x_Ol[1,i+1] == x_Ol[1, i] + dt/m * ( u_Ol[1, i] - m*g*sin( sin(sin( ( x_Ol[2,i] - xF[2] )/ xF[2]*4*3.14  )) ) - rho*x_Ol[1,i]^2  ))
+        for i=1:N	
+	    @NLconstraint(mdl, x_Ol[1,i+1] == x_Ol[1, i] + dt/(m*l^2) * ( u_Ol[1, i] - m*g*l*( sin( x_Ol[2,i] )+cos( x_Ol[2,i] )*u_Ol[2, i] ) - b*x_Ol[1,i]  ))
            
-	    @NLconstraint(mdl, x_Ol[2,i+1] == x_Ol[2, i] + dt * (x_Ol[1, i]) )
-	    @NLconstraint(mdl, x_Ol[3,i+1] == x_Ol[1, i])
-	    @NLconstraint(mdl, x_Ol[4,i+1] == x_Ol[2, i]) 
+	    @NLconstraint(mdl, x_Ol[2,i+1] == x_Ol[2, i] + dt * ( x_Ol[1, i]) )
+	    @NLconstraint(mdl, x_Ol[3,i+1] == x_Ol[3, i] + dt * ( u_Ol[2, i]) )
+	    @NLconstraint(mdl, x_Ol[4,i+1] == x_Ol[4, i] + dt * ( x_Ol[3, i]) ) 
         end
        
 	# Constraints
@@ -81,12 +84,10 @@ type LMPC_Model
         #     setupperbound(x_Ol[2,i],  0.2)
         # end
 
-        #for j=3:5
-        #    for i=1:N
-        #        setlowerbound(u_Ol[j,i], -500)
-        #        setupperbound(u_Ol[j,i],  500)
-        #    end
-        #end
+        for i=1:N
+            setlowerbound(u_Ol[2,i], -15)
+            setupperbound(u_Ol[2,i],  15)
+        end
 
 	# Constraints on lambda
         for j=1:SSdim
@@ -102,8 +103,8 @@ type LMPC_Model
         
 	# Cost definitions
         # State cost
-	@NLexpression(mdl, state_cost, sum{ Qf*(u_Ol[1, j]^2), j=1:N-1} 
-	+ sum{Qt*10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4])^2  )/( (10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4]) )^2)^2 + 1)^0.5 , j=1:N} ) 
+	@NLexpression(mdl, state_cost, sum{ Q1*(u_Ol[1, j]^2), j=1:N} + sum{ Q2*(u_Ol[2, j]^2), j=1:N} 
+ + sum{Qt*10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4])^2  )/( (10*( x_Ol[1,j]^2 + (x_Ol[2,j]-xF[2])^2 + x_Ol[3,j]^2 + (x_Ol[4,j]-xF[4])^2) )^2 + 1)^0.5 , j=1:N} ) 
 
         # Terminal  cost
         @NLexpression(mdl, termi_cost, sum{ Qfun[j] * lamb[j] ,j=1:SSdim})
