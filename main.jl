@@ -27,7 +27,7 @@ SystemParams.dt  = 0.1
 SystemParams.rho = 0.01
 SystemParams.m   = 1.0
 
-LMPCparams.N  = 5
+LMPCparams.N  = 6
 LMPCparams.Qt = 1.0
 LMPCparams.Qf = 1.0
 # Initial Conditions;
