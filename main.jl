@@ -28,10 +28,13 @@ SystemParams.l   = 1.0
 SystemParams.m   = 0.5
 SystemParams.b   = 0.01
 
+
+alpha         = 1
+
 LMPCparams.N  = 3
 LMPCparams.Qt = 10.0
-LMPCparams.Q1 = 1.0     # Torque
-LMPCparams.Q2 = 0.1     # Acceleration
+LMPCparams.Q1 = alpha * 1     # Torque
+LMPCparams.Q2 = alpha * 0.1     # Acceleration
 # Initial Conditions;
 x0 = [0.0,3.14,0.0,0.0]
 
@@ -43,7 +46,7 @@ hold()
 plot(x_feasible[2,:], x_feasible[1,:], "--g*")
 
 # Initialize SS and Q function for first feasible iteration
-Buffer = 300
+Buffer = 400
 
 SS   = zeros(4, Buffer, 20)
 Qfun = zeros(1, Buffer, 20)
@@ -69,6 +72,7 @@ it = 2
 Difference = 1
 xWarm = zeros(4, LMPCparams.N+1)
 uWarm = zeros(2, LMPCparams.N)
+
 while (abs(Difference) > (1e-1))&&(it<10)
     
     # Vectorize the SS and the Q function
@@ -76,6 +80,9 @@ while (abs(Difference) > (1e-1))&&(it<10)
     ConvSS   = zeros(4, SSdim)
     ConvQfun = zeros(SSdim)
     lambWarm = zeros(SSdim)
+    
+    #xWarm[:,1:LMPCparams.N+1] = x_LMPC[:,1:LMPCparams.N+1]
+    #uWarm[:,1:LMPCparams.N]   = u_LMPC[:,1:LMPCparams.N]
 
     Counter  = 1
     for ii = 1:it-1
@@ -101,7 +108,7 @@ while (abs(Difference) > (1e-1))&&(it<10)
     # Enter the time loop for the LMPC at the j-th iteration
     t = 1
     while ((cost_LMPC[t] > (1e-2))&&(t<Buffer-1))
-        
+
         if t == 1
             #solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun) 
             solveLMPCProblem(mdl,LMPCSol, x_LMPC[:,t], ConvSS, ConvQfun, xWarm, uWarm, lambWarm) 
@@ -164,22 +171,3 @@ it = it - 1
 for i = 1:it
     println(i,"-th itearion cost; ", Qfun[1,1,i])
 end
-
-xF = SystemParams.xF
-s  = collect(0:0.1:xF[2])
-
-Length_s = size(s)[1]
-angle = zeros(Length_s)
-
-figure()
-hold(1)
-i = 1 
-plot(SS[4, 1:time[i], i],  SS[2, 1:time[i], i], "-ro" )
-
-i = it
-plot(SS[4, 1:time[i], i],  SS[2, 1:time[i], i], "-go")
-grid(1)
-title("LMPC Steady State")
-axis("equal")
-xlabel(L"Time step", size=24)
-ylabel(L"$||x_2||_2^2$", size=24)

@@ -8,7 +8,7 @@ function Feasible_Traj(SystemParams::TypeSystemParams, x0::Array{Float64,1})
     m   = SystemParams.m
     b   = SystemParams.b
 
-    Points = 100
+    Points = 200
     
     x_feasible = zeros(4, Points+1)
     u_feasible = zeros(2, Points)
@@ -19,7 +19,7 @@ function Feasible_Traj(SystemParams::TypeSystemParams, x0::Array{Float64,1})
     for i = 1:Points
 	# Logic to compute input
 	if i==1
-		u_feasible[2, i] =  10.0
+		u_feasible[2, i] =   10.0
 	elseif ((x_feasible[4,i] + dt*x_feasible[3,i]-xF[4])^2<0.0001)&&((x_feasible[3,i])^2>0.001)
 		u_feasible[2, i] = -10.0
 	else
