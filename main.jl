@@ -29,12 +29,13 @@ SystemParams.m   = 0.5
 SystemParams.b   = 0.01
 
 
-alpha         = 1
+alpha         = 0.001               # Scaling:      Good Settings = 1
+beta          = 1
 
 LMPCparams.N  = 3
-LMPCparams.Qt = 10.0
-LMPCparams.Q1 = alpha * 1     # Torque
-LMPCparams.Q2 = alpha * 0.1     # Acceleration
+LMPCparams.Qt = 10.0                   # Time:         Good Settings = 10.0
+LMPCparams.Q1 = beta * alpha * 1       # Torque:       Good settings = 1
+LMPCparams.Q2 =        alpha * 0.1     # Acceleration: Good Settings = 0.1
 # Initial Conditions;
 x0 = [0.0,3.14,0.0,0.0]
 
@@ -81,8 +82,8 @@ while (abs(Difference) > (1e-1))&&(it<10)
     ConvQfun = zeros(SSdim)
     lambWarm = zeros(SSdim)
     
-    #xWarm[:,1:LMPCparams.N+1] = x_LMPC[:,1:LMPCparams.N+1]
-    #uWarm[:,1:LMPCparams.N]   = u_LMPC[:,1:LMPCparams.N]
+    xWarm[:,1:LMPCparams.N+1] = x_LMPC[:,1:LMPCparams.N+1]
+    uWarm[:,1:LMPCparams.N]   = u_LMPC[:,1:LMPCparams.N]
 
     Counter  = 1
     for ii = 1:it-1
