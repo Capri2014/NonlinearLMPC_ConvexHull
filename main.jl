@@ -27,7 +27,7 @@ SystemParams.dt  = 0.1
 SystemParams.rho = 0.01
 SystemParams.m   = 1.0
 
-LMPCparams.N  = 6
+LMPCparams.N  = 5
 LMPCparams.Qt = 1.0
 LMPCparams.Qf = 1.0
 # Initial Conditions;
@@ -41,7 +41,7 @@ hold()
 plot(x_feasible[2,:], x_feasible[1,:], "--g*")
 
 # Initialize SS and Q function for first feasible iteration
-Buffer = 200
+Buffer = 400
 
 SS   = zeros(4, Buffer, 20)
 Qfun = zeros(1, Buffer, 20)
@@ -67,7 +67,7 @@ it = 2
 Difference = 1
 xWarm = zeros(4, LMPCparams.N+1)
 uWarm = zeros(1, LMPCparams.N)
-while (abs(Difference) > (1e-1))&&(it<20)
+while (abs(Difference) > (1e-2))&&(it<20)
     
     # Vectorize the SS and the Q function
     SSdim = sum(time) # sum(Time) = Total number of time steps for all iterations
