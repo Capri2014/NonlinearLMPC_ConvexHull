@@ -64,6 +64,34 @@ plot(TimePlot, u_LMPC[1,1:time[i]-1]', "-ob")
 subplot(212)
 plot(TimePlot, u_LMPC[2,1:time[i]-1]', "-bo")
 
+figure()
+i = 1
+TimePlot  = collect(0:1:time[i]-1)*dt
+plot(SS[4, 1:time[i], i]',  SS[2, 1:time[i], i]', "-ro")
+plot(SS[4, 1:time[i], 1]',  SS[2, 1:time[i], 1]', "-ro", label="1st Iteration")
+i = 2
+TimePlot  = collect(0:1:time[i]-1)*dt
+plot(SS[4, 1:time[i], i]',  SS[2, 1:time[i], i]', "-ko", label="2nd Iteration")
+i = 3
+TimePlot  = collect(0:1:time[i]-1)*dt
+plot(SS[4, 1:time[i], i]',  SS[2, 1:time[i], i]', "-yo", label="3rd Iteration")
+i = 4
+TimePlot  = collect(0:1:time[i]-1)*dt
+plot(SS[4, 1:time[i], i]',  SS[2, 1:time[i], i]', "-mo", label="4th Iteration")
+i = 6
+TimePlot  = collect(0:1:time[i]-1)*dt
+plot(SS[4, 1:time[i], i]',  SS[2, 1:time[i], i]', "-bo", label="6th Iteration")
+i = 8
+TimePlot  = collect(0:1:time[i]-1)*dt
+plot(SS[4, 1:time[i], i]',  SS[2, 1:time[i], i]', "-go", label="8th Iteration")
+i = 9
+TimePlot  = collect(0:1:time[i]-1)*dt
+plot(SS[4, 1:time[i], i]',  SS[2, 1:time[i], i]', "-co", label="9th Iteration")
+legend(loc="lower right")
+xlabel("x-axis [m]")
+ylabel("Angle [rad]")
+
+
 # Now draaw the car
 width  = 0.2
 height = 0.1
@@ -94,15 +122,16 @@ end
 
 fig = figure()
 ax = plt
-ax[:plot](xPos[time[it], :]', yPos[time[it], :]', color = "gray")
-ax[:plot](xVec[time[it], :]', yVec[time[it], :]', color ="gray", "-o", linewidth = "2")
+frame = 1#time[it] 
+ax[:plot](xPos[frame, :]', yPos[frame, :]', color = "gray")
+ax[:plot](xVec[frame, :]', yVec[frame, :]', color ="gray", "-o", linewidth = "2")
 
-frame = 10
+frame = 5
 ax[:plot](xPos[frame, :]', yPos[frame, :]', "r")
 ax[:plot](xVec[frame, :]', yVec[frame, :]', "-ob", linewidth = "4")
 xlim([-0.2, 2.2])
 ylim([-0.1, 1.5])
-
+xlabel("x-axis [m]")
 
 #Use External Viewer for Animation
 pygui(true)
